@@ -205,11 +205,11 @@ public:
                 (mapY + 1.0 - posY) * deltaDistY;
 
             // DDA (Digital Differential Analysis)
-            while (hit == 0) {
-                if (sideDistX < sideDistY) {
-                    sideDistX += deltaDistX;
-                    mapX += stepX;
-                    side = 0;
+            while (hit == 0) { //iteracja dopoki promien nie uderzy w sciane
+                if (sideDistX < sideDistY) {  //jesli promieniowi jest blizej do pionowej linii siatki
+                    sideDistX += deltaDistX; // dodajemy do odleglosci do najblizszej lini siatki odleglosc rowna odleglosci pomiedzy pionowymi liniami i otrzymujemy odleglosc od gracza do nastepnej pionowej lini
+                    mapX += stepX; //aktualizacja pozycji na mapie
+                    side = 0; // promien uderzyl w sciane pinowa
                 }
                 else {
                     sideDistY += deltaDistY;
@@ -217,19 +217,19 @@ public:
                     side = 1;
                 }
 
-                if (worldMap[mapX][mapY] > 0) hit = 1;
+                if (worldMap[mapX][mapY] > 0) hit = 1; //jesli jest sciana, konczy petle
             }
 
             // obliczenie odległości do ściany
             if (side == 0)
-                perpWallDist = (mapX - posX + (1 - stepX) / 2) / rayDirX;
+                perpWallDist = (mapX - posX + (1 - stepX) / 2) / rayDirX;// prostopadla odleglosc od kamery do sciany (zawsze mniejsza lub rowna prawdziwej odleglosci)
             else
                 perpWallDist = (mapY - posY + (1 - stepY) / 2) / rayDirY;
 
             // obliczenie wysokości linii do narysowania
-            int lineHeight = static_cast<int>(SCREEN_HEIGHT / perpWallDist);
-            int drawStart = std::max(0, -lineHeight / 2 + SCREEN_HEIGHT / 2);
-            int drawEnd = std::min(SCREEN_HEIGHT - 1, lineHeight / 2 + SCREEN_HEIGHT / 2);
+            int lineHeight = static_cast<int>(SCREEN_HEIGHT / perpWallDist);// im dalej sciana, tym nizsza linia
+            int drawStart = std::max(0, -lineHeight / 2 + SCREEN_HEIGHT / 2); //gorny punkt lini, jesli obliczona wartosc jest ujemna to zostanie uzyte 0
+            int drawEnd = std::min(SCREEN_HEIGHT - 1, lineHeight / 2 + SCREEN_HEIGHT / 2);// dolny punkt, jesli obliczona wartosc przekracza wysokosc ekranu, zostaje uzyte SCREEN_HEIGHT-1 czyli dolna krawedz ekranu
 
             // kolory scian
             SDL_Color wallColor;
@@ -241,19 +241,20 @@ public:
             }
 
             // przyciemnianie scian
-            if (side == 1) {
+            if (side == 1) { //przyciemnia sciany rownolegle do osi X (na polnoc i poludnie)
                 wallColor.r /= 2;
                 wallColor.g /= 2;
                 wallColor.b /= 2;
             }
 
+            //ustawienie koloru i rysowanie linii
             SDL_SetRenderDrawColor(renderer, wallColor.r, wallColor.g, wallColor.b, wallColor.a);
             SDL_RenderDrawLine(renderer, x, drawStart, x, drawEnd);
         }
 
         drawMiniMap();
 
-        SDL_RenderPresent(renderer);
+        SDL_RenderPresent(renderer); // wyswietlenie wszystkiego co zostalo do tej pory narysowane
     }
 
     void gameLoop() {
@@ -261,14 +262,14 @@ public:
         bool quit = false;
 
         while (!quit) {
-            while (SDL_PollEvent(&event)) {
-                if (event.type == SDL_QUIT)
+            while (SDL_PollEvent(&event)) { // sprawdza oczekujace zdarzenia
+                if (event.type == SDL_QUIT) //jesli uzytkownik zamknal okno
                     quit = true;
 
-                if (event.type == SDL_KEYDOWN) {
+                if (event.type == SDL_KEYDOWN) { //sprawdza ktory klawisz nacisnieto
                     switch (event.key.keysym.sym) {
                     case SDLK_UP:
-                    case SDLK_w:
+                    case SDLK_w: //w lub strzalka w gore
                         moveForward();
                         break;
                     case SDLK_DOWN:
@@ -283,13 +284,13 @@ public:
                     case SDLK_d:
                         rotateRight();
                         break;
-                    case SDLK_ESCAPE:
+                    case SDLK_ESCAPE:// escape zamyka okno
                         quit = true;
                         break;
                     }
                 }
             }
-            renderFrame();
+            renderFrame(); 
             SDL_Delay(16); // około 60 FPS
         }
     }
