@@ -180,8 +180,9 @@ public:
 
           
             int stepX, stepY; // okreslaja kierunkek w ktorym bedziemy przeszukiwac siatke mapy (lewo/prawo i gora/dol)
-            int hit = 0; //0 - brak kolizji, 1 - kolizja ze sciana, flaga wyjscia z petli DDA
-            int side; // 0 - promien uderza w sciane od strony X, 1 - od strony Y
+          //  bool hit = 0; //0 - brak kolizji, 1 - kolizja ze sciana, flaga wyjscia z petli DDA
+           // int side; // 0 - promien uderza w sciane od strony X, 1 - od strony Y
+            int collisionType = 0;
 
             if (rayDirX < 0) { // jesli promien idzie w kierunku malejacych x, to przeszukujemy w lewo
                 stepX = -1;
@@ -205,23 +206,23 @@ public:
                 (mapY + 1.0 - posY) * deltaDistY;
 
             // DDA (Digital Differential Analysis)
-            while (hit == 0) { //iteracja dopoki promien nie uderzy w sciane
+            while (collisionType == 0) { //iteracja dopoki promien nie uderzy w sciane
                 if (sideDistX < sideDistY) {  //jesli promieniowi jest blizej do pionowej linii siatki
                     sideDistX += deltaDistX; // dodajemy do odleglosci do najblizszej lini siatki odleglosc rowna odleglosci pomiedzy pionowymi liniami i otrzymujemy odleglosc od gracza do nastepnej pionowej lini
                     mapX += stepX; //aktualizacja pozycji na mapie
-                    side = 0; // promien uderzyl w sciane pinowa
+                    if (worldMap[mapX][mapY] > 0) collisionType = 1; // promien uderzyl w sciane pinowa
                 }
                 else {
                     sideDistY += deltaDistY;
                     mapY += stepY;
-                    side = 1;
+                    if (worldMap[mapX][mapY] > 0) collisionType = 2;
                 }
 
-                if (worldMap[mapX][mapY] > 0) hit = 1; //jesli jest sciana, konczy petle
+                //if (worldMap[mapX][mapY] > 0) hit = 1; //jesli jest sciana, konczy petle
             }
 
             // obliczenie odległości do ściany
-            if (side == 0)
+            if (collisionType==1)
                 perpWallDist = (mapX - posX + (1 - stepX) / 2) / rayDirX;// prostopadla odleglosc od kamery do sciany (zawsze mniejsza lub rowna prawdziwej odleglosci)
             else
                 perpWallDist = (mapY - posY + (1 - stepY) / 2) / rayDirY;
@@ -241,7 +242,7 @@ public:
             }
 
             // przyciemnianie scian
-            if (side == 1) { //przyciemnia sciany rownolegle do osi X (na polnoc i poludnie)
+            if (collisionType == 2) { //przyciemnia sciany rownolegle do osi X (na polnoc i poludnie)
                 wallColor.r /= 2;
                 wallColor.g /= 2;
                 wallColor.b /= 2;
